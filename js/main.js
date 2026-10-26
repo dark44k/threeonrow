@@ -159,7 +159,6 @@ function startLevel(i) {
   setHint(false);
   game = new Game(LEVELS[i], view, { onChange: updateHud, onToast: toast, onEnd: endLevel, onSwap: buzz });
   updateHud();
-  showIntro(LEVELS[i]);
 }
 
 // ---------- ввод: клик-клик или свайп ----------
