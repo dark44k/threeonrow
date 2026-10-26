@@ -114,6 +114,10 @@ export class View {
     setTimeout(() => node.remove(), 900);
   }
 
+  rectOf(tile) {
+    return this.nodes.get(tile.id)?.getBoundingClientRect() ?? null;
+  }
+
   cellAt(x, y) {
     const rect = this.el.getBoundingClientRect();
     const c = Math.floor(((x - rect.left) / rect.width) * this.size);

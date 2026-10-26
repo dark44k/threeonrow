@@ -662,3 +662,34 @@ button {
   -webkit-user-select: none;
   -webkit-touch-callout: none; /* без меню по долгому нажатию на iOS */
 }
+
+/* всплывающее «что это»: полупрозрачное и не перехватывает нажатия */
+.tip {
+  position: fixed;
+  z-index: 20;
+  max-width: 240px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  border-radius: 10px;
+  background: rgba(30, 20, 12, 0.62);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.35;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: tip-in 0.15s ease-out;
+}
+
+.tip[hidden] {
+  display: none;
+}
+
+.link {
+  cursor: help;
+}
+
+@keyframes tip-in {
+  from { opacity: 0; transform: translateY(4px); }
+}

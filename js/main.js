@@ -39,7 +39,7 @@ function renderChain() {
   const parts = chain.map((link) => {
     const isTarget = link.type === target;
     const state = isTarget && game.targetCleared ? 'done' : linkLit(link) ? 'lit' : '';
-    return `<div class="link ${state} ${isTarget ? 'goal' : ''}" title="${link.text}"><span class="ico">${linkIcon(link)}</span><small>${link.text}</small></div>`;
+    return `<div class="link ${state} ${isTarget ? 'goal' : ''}" data-type="${link.type || ''}" data-name="${link.name || ''}"><span class="ico">${linkIcon(link)}</span><small>${link.text}</small></div>`;
   });
   $('#chain').innerHTML = parts.join('<span class="arrow">→</span>');
 }
@@ -157,9 +157,49 @@ function startLevel(i) {
   $('#log').innerHTML = '';
   document.body.dataset.mood = LEVELS[i].mood ?? 0;
   setHint(false);
+  hideTip();
   game = new Game(LEVELS[i], view, { onChange: updateHud, onToast: toast, onEnd: endLevel, onSwap: buzz });
   updateHud();
 }
+
+// ---------- подсказка «что это» по нажатию на фишку или звено цепочки ----------
+const describe = (type) => `${TILES[type].emoji} ${TILES[type].name}`;
+
+let tipTimer = null;
+
+function showTip(html, rect) {
+  const tip = $('#tip');
+  tip.innerHTML = html;
+  tip.hidden = false;
+  const w = tip.offsetWidth;
+  const h = tip.offsetHeight;
+  const left = Math.min(Math.max(rect.left + rect.width / 2 - w / 2, 8), window.innerWidth - w - 8);
+  const top = rect.top - h - 8 >= 8 ? rect.top - h - 8 : rect.bottom + 8;
+  tip.style.left = `${left}px`;
+  tip.style.top = `${top}px`;
+  clearTimeout(tipTimer);
+  tipTimer = setTimeout(hideTip, 4000);
+}
+
+function hideTip() {
+  clearTimeout(tipTimer);
+  $('#tip').hidden = true;
+}
+
+function showTileTip(cell) {
+  const tile = game.board.get(...cell);
+  const rect = tile && view.rectOf(tile);
+  if (rect) showTip(describe(tile.type), rect);
+}
+
+$('#chain').addEventListener('click', (e) => {
+  const link = e.target.closest('.link');
+  if (!link) return;
+  const { type } = link.dataset;
+  showTip(type ? describe(type) : `${link.querySelector('.ico').textContent} ${link.dataset.name}`, link.getBoundingClientRect());
+});
+
+window.addEventListener('scroll', hideTip, { passive: true });
 
 // ---------- ввод: клик-клик или свайп ----------
 // Короткая вибрация на телефоне: удачный ход — щелчок, неудачный — двойное «нет».
@@ -172,6 +212,7 @@ function buzz(valid) {
 }
 
 function attempt(a, b) {
+  hideTip();
   selected = null;
   view.select(null);
   if (game.board.inBounds(...b)) game.trySwap(a, b);
@@ -181,6 +222,7 @@ function clickCell(cell) {
   if (!selected) {
     selected = cell;
     view.select(game.board.get(...cell));
+    showTileTip(cell);
     return;
   }
   const dist = Math.abs(selected[0] - cell[0]) + Math.abs(selected[1] - cell[1]);
@@ -189,9 +231,11 @@ function clickCell(cell) {
   } else if (dist === 0) {
     selected = null;
     view.select(null);
+    hideTip();
   } else {
     selected = cell;
     view.select(game.board.get(...cell));
+    showTileTip(cell);
   }
 }
 

@@ -106,7 +106,7 @@ export const LEVELS = [
     triggers: [{ night: true, when: { type: 'protester', atLeast: 14 }, type: 'riot', count: 1, text: '🛡️ На ночной митинг приехал ОМОН' }],
     chain: [
       { type: 'protester', text: 'митинг растёт' },
-      { flag: 'night', icon: '🌙', text: 'каждые 3 хода — комендантский час' },
+      { flag: 'night', icon: '🌙', name: 'Комендантский час', text: 'каждые 3 хода — комендантский час' },
       { type: 'riot', text: 'ночью на большой митинг (14+) приедет ОМОН' },
     ],
     intro: 'Новое: день и ночь. ОМОН приезжает только в комендантский час и только если митинг большой.',
