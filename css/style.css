@@ -363,6 +363,287 @@ body[data-mood='3'] .board {
   50% { opacity: 0.9; transform: scale(1.06); }
 }
 
+/* ---------- хаос на поле ----------
+   board[data-chaos] = 0…3 считается по фишкам (heat в tiles.js). На ярмарке всё неподвижно,
+   потом митинг начинает покачиваться, трясти плакатами, а под конец армия стреляет и всё горит.
+   Анимации висят на .act, чтобы не мешать pop/bite/appear на .face. */
+.act {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.act::before,
+.act::after {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* огонь живой всегда */
+.tile[data-type='fire'] .act {
+  transform-origin: 50% 90%;
+  animation: flicker 0.9s ease-in-out var(--d) infinite alternate;
+}
+
+.tile[data-type='fire'] .act::before {
+  content: '';
+  inset: -12%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 150, 40, 0.55), rgba(255, 80, 20, 0) 70%);
+  animation: glow 1.2s ease-in-out var(--d) infinite alternate;
+}
+
+/* армия: вспышка выстрела и трассер — при каждом «столкновении» и постоянно, когда всё накалилось */
+.tile[data-type='army'] .act::after {
+  content: '💥';
+  left: -38%;
+  top: 8%;
+  font-size: 0.5em;
+  opacity: 0;
+}
+
+.tile[data-type='army'] .act::before {
+  content: '';
+  right: 92%;
+  top: 46%;
+  width: 0;
+  height: 0.06em;
+  border-radius: 2px;
+  background: linear-gradient(to left, #fff6b0, rgba(255, 190, 60, 0));
+  opacity: 0;
+}
+
+/* 1: на площади неспокойно */
+.board[data-chaos='1'] .tile:is([data-type='protester'], [data-type='leader']) .act {
+  transform-origin: 50% 100%;
+  animation: sway 1.8s ease-in-out var(--d) infinite;
+}
+
+/* 2–3: митинг в разгаре, силовики на взводе */
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='protester'] .act {
+  transform-origin: 50% 100%;
+  animation: wave 0.6s ease-in-out var(--d) infinite;
+}
+
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='angry'] .act {
+  animation: tremble 0.3s linear var(--d) infinite;
+}
+
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='leader'] .act {
+  animation: shout 0.8s ease-in-out var(--d) infinite;
+}
+
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='leader'] .act::after {
+  content: '';
+  inset: 0;
+  border: 0.05em solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: ring 0.8s ease-out var(--d) infinite;
+}
+
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='riot'] .act {
+  animation: push 1.1s ease-in-out var(--d) infinite;
+}
+
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='police'] .act {
+  animation: whistle 1.2s ease-in-out var(--d) infinite;
+}
+
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='news'] .act {
+  animation: flutter 1.4s ease-in-out var(--d) infinite;
+}
+
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='army'] .act {
+  animation: recoil 1.6s linear var(--d) infinite;
+}
+
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='army'] .act::after {
+  animation: muzzle 1.6s linear var(--d) infinite;
+}
+
+.board:is([data-chaos='2'], [data-chaos='3']) .tile[data-type='army'] .act::before {
+  animation: tracer 1.6s linear var(--d) infinite;
+}
+
+/* 3: полный хаос — стреляют чаще, огонь выше, люди мечутся, поле трясёт и затягивает дымом */
+.board[data-chaos='3'] {
+  animation: shake 2.6s linear infinite, alarm 1.1s ease-in-out infinite alternate;
+}
+
+.board[data-chaos='3'] .tile[data-type='protester'] .act {
+  animation-duration: 0.4s;
+}
+
+.board[data-chaos='3'] .tile[data-type='army'] .act,
+.board[data-chaos='3'] .tile[data-type='army'] .act::before,
+.board[data-chaos='3'] .tile[data-type='army'] .act::after {
+  animation-duration: 0.9s;
+}
+
+.board[data-chaos='3'] .tile[data-type='citizen'] .act {
+  animation: panic 0.5s ease-in-out var(--d) infinite;
+}
+
+.board[data-chaos='3'] .tile[data-type='fire'] .act {
+  animation-duration: 0.45s;
+}
+
+.board[data-chaos='3'] .tile[data-type='fire'] .act::before {
+  inset: -30%;
+}
+
+.board[data-chaos='3'] .tile[data-type='fire'] .act::after {
+  content: '•';
+  top: -10%;
+  left: 55%;
+  font-size: 0.3em;
+  color: #ffd25a;
+  text-shadow: 0 0 4px #ff7a1a;
+  animation: ember 1.1s ease-out var(--d) infinite;
+}
+
+.board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(60, 50, 50, 0.35), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 80% 30%, rgba(70, 55, 50, 0.3), transparent 70%),
+    radial-gradient(ellipse at 50% 120%, rgba(255, 80, 20, 0.3), transparent 60%);
+  background-size: 240px 240px, 320px 320px, 100% 100%;
+}
+
+.board[data-chaos='2']::after {
+  opacity: 0.35;
+}
+
+.board[data-chaos='3']::after {
+  opacity: 0.9;
+  animation: smoke 9s linear infinite;
+}
+
+/* разовый выстрел, когда армия кого-то «съела» — на любом уровне хаоса */
+.board .tile[data-type='army'].bite .act::after {
+  animation: muzzle 0.4s linear;
+}
+
+.board .tile[data-type='army'].bite .act::before {
+  animation: tracer 0.4s linear;
+}
+
+@keyframes flicker {
+  from { transform: scale(1, 1) skewX(-3deg); }
+  to { transform: scale(1.06, 1.14) skewX(3deg); }
+}
+
+@keyframes glow {
+  from { opacity: 0.5; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+@keyframes wave {
+  0%, 100% { transform: rotate(-16deg) translateY(0); }
+  50% { transform: rotate(16deg) translateY(-10%); }
+}
+
+@keyframes tremble {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4%); }
+  75% { transform: translateX(4%); }
+}
+
+@keyframes shout {
+  0%, 100% { transform: scale(1) rotate(-8deg); }
+  30% { transform: scale(1.18) rotate(-14deg); }
+}
+
+@keyframes ring {
+  from { transform: scale(0.6); opacity: 0.8; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes push {
+  0%, 60%, 100% { transform: translateY(0) scale(1); }
+  70% { transform: translateY(-8%) scale(1.12); }
+}
+
+@keyframes whistle {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(-8deg) translateY(-4%); }
+}
+
+@keyframes flutter {
+  0%, 100% { transform: rotate(-4deg) skewY(0); }
+  50% { transform: rotate(4deg) skewY(-6deg); }
+}
+
+@keyframes recoil {
+  0%, 100% { transform: translateX(0); }
+  5% { transform: translateX(10%) rotate(4deg); }
+  14% { transform: translateX(0); }
+}
+
+@keyframes muzzle {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  3% { opacity: 1; transform: scale(1.2); }
+  14% { opacity: 0; transform: scale(0.8); }
+}
+
+@keyframes tracer {
+  0%, 100% { opacity: 0; width: 0; }
+  3% { opacity: 1; width: 0.2em; }
+  12% { opacity: 0; width: 1.6em; }
+}
+
+@keyframes panic {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-6%, -6%); }
+  75% { transform: translate(6%, -3%); }
+}
+
+@keyframes ember {
+  from { transform: translate(0, 0); opacity: 1; }
+  to { transform: translate(-40%, -260%); opacity: 0; }
+}
+
+@keyframes shake {
+  0%, 86%, 100% { transform: none; }
+  88% { transform: translate(3px, -2px); }
+  91% { transform: translate(-3px, 2px); }
+  94% { transform: translate(2px, 3px); }
+  97% { transform: translate(-1px, -2px); }
+}
+
+@keyframes alarm {
+  from { box-shadow: 0 0 18px rgba(255, 60, 20, 0.35), inset 0 0 0 3px rgba(120, 30, 10, 0.4); }
+  to { box-shadow: 0 0 40px rgba(255, 40, 10, 0.8), inset 0 0 0 3px rgba(160, 30, 10, 0.6); }
+}
+
+@keyframes smoke {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: 240px -240px, -320px -320px, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .act,
+  .act::before,
+  .act::after,
+  .board,
+  .board::after {
+    animation: none !important;
+  }
+}
+
 /* ---------- низ ---------- */
 .log {
   min-height: 60px;

@@ -17,6 +17,7 @@ export class View {
     this.el.innerHTML = '';
     this.el.style.setProperty('--n', size);
     this.setNight(false);
+    this.el.dataset.chaos = 0;
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         const cell = document.createElement('div');
@@ -67,11 +68,24 @@ export class View {
         this.nodes.delete(id);
       }
     }
+    this.setChaos(board);
+  }
+
+  // Уровень хаоса 0…3 по сумме heat на поле: от тихой ярмарки до стрельбы и пожаров (анимации в CSS).
+  setChaos(board) {
+    let heat = 0;
+    board.forEach((t) => {
+      if (!t.fixed) heat += TILES[t.type].heat || 0;
+    });
+    const density = heat / (this.size * this.size);
+    const chaos = density >= 0.5 ? 3 : density >= 0.15 ? 2 : density >= 0.04 ? 1 : 0;
+    this.el.dataset.chaos = chaos;
   }
 
   create(t) {
     const node = document.createElement('div');
     node.className = 'tile';
+    node.style.setProperty('--d', `${(-Math.random() * 3).toFixed(2)}s`); // чтобы толпа не дёргалась синхронно
     this.paint(node, t);
     this.el.appendChild(node);
     this.nodes.set(t.id, node);
@@ -82,7 +96,7 @@ export class View {
     const def = TILES[t.type];
     node.dataset.type = t.type;
     node.title = def.name;
-    node.innerHTML = `<span class="face">${def.emoji}</span>${def.crown ? '<span class="crown">👑</span>' : ''}<span class="tag" hidden></span>`;
+    node.innerHTML = `<span class="act"><span class="face">${def.emoji}</span></span>${def.crown ? '<span class="crown">👑</span>' : ''}<span class="tag" hidden></span>`;
   }
 
   select(tile) {
